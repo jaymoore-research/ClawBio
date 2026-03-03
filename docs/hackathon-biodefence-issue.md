@@ -256,26 +256,40 @@ Target PDB → Hotspot Selection → RFdiffusion (N backbones)
 
 ---
 
-### 5. `threat-screener` — Priority: HIGH (enables Hard track, stretch goal)
+### 5. `threat-screener` — Priority: CRITICAL (enables Hard track — the differentiator)
 
-**Purpose**: Structural and motif-based screening to detect biological threats that evade sequence-level checks.
+**Purpose**: Structural and motif-based screening to detect biological threats that evade sequence-level DNA synthesis checks. This is the most impactful track per the brief — the October 2025 Science paper showed AI-redesigned toxins can retain function while evading all current screening software. The brief explicitly states this creates "an urgent need for people who understand the technology deeply enough to build countermeasures."
 
 **Three detection modes** (from brief):
 
-1. **Structural homology**: Fold query protein (ESMFold/Boltz-2 via Amina), compare against threat protein database using Foldseek/DALI. Flag if structural TM-score > 0.5 to known toxin/virulence factor despite < 30% sequence identity.
+1. **Structural homology screening**: Fold query protein (ESMFold/Boltz-2 via Amina), compare against curated threat protein database using Foldseek/DALI. Flag if structural TM-score > 0.5 to known toxin/virulence factor despite < 30% sequence identity. This is the core insight: dangerous redesigns preserve structure while changing sequence.
 
 2. **Motif detection**: Scan for conserved dangerous functional motifs:
-   - Receptor-binding domains (RBD patterns)
+   - Receptor-binding domains (RBD patterns from known pathogens)
    - Membrane-disrupting regions (amphipathic helices, pore-forming motifs)
-   - Protease cleavage sites (furin sites, etc.)
+   - Protease cleavage sites (furin sites, TMPRSS2 sites, etc.)
    - Aggregation-prone sequences (prion-like, amyloid cross-beta)
+   - Immune evasion domains (glycan shields, complement evasion motifs)
 
 3. **Anomaly scoring**: Flag sequences with:
-   - Unusual codon usage (synthetic signatures)
-   - Chimeric domain architecture (domains from different pathogen families)
-   - High structural similarity to threat agents but low sequence identity (the key evasion signal from the Science 2025 paper)
+   - Unusual codon usage (synthetic signatures vs natural evolution)
+   - Chimeric domain architecture (domains from different pathogen families fused together)
+   - High structural similarity to threat agents but low sequence identity (the key evasion signal)
+   - Optimisation trajectories suggesting iterative immune evasion (design patterns, not research patterns)
 
-**Test framework**: Assemble positive set (known threat proteins) + negative set (benign controls). Report TPR, FPR, precision, recall, F1. Show specific examples of catches that sequence screening misses.
+**Threat database construction**:
+- **Positive set**: Known toxins (ricin, abrin, botulinum), virulence factors (Ebola GP, anthrax PA/LF), immune evasion proteins, fusion peptides, pore-forming toxins — sourced from UniProt/PDB with "toxin" and "virulence" annotations
+- **Negative set**: Benign human proteins, common enzymes, structural proteins, designed therapeutic binders
+- **Grey zone**: Dual-use proteins (e.g., ACE2 binders that could be diagnostic or evasive)
+
+**Test framework**: Run both sets through the screener. Report:
+- True positive rate (TPR) / sensitivity — what % of threats detected
+- False positive rate (FPR) — what % of benign proteins flagged
+- Precision, recall, F1 score
+- Specific examples of catches that BLAST/sequence-level screening would miss
+- Analysis of failure modes (what slips through, and why)
+
+**Integration with binder-designer**: The threat-screener can also be run as a safety check on our own binder designs — demonstrating responsible use of protein design tools. This is a strong narrative for Impact (30%).
 
 **Estimated effort**: 2-3 days
 
@@ -298,6 +312,12 @@ Target PDB → Hotspot Selection → RFdiffusion (N backbones)
 
 ## Recommended Hackathon Strategy
 
+### Approach: All Three Tracks Against One Target
+
+The brief rewards depth over breadth: *"A well-executed project against a single pathogen will always be valued more highly than an ambitious framework with no worked application."* We tackle **all three difficulty tracks** (Easy + Medium + Hard) against a single pathogen to show the full pipeline — from designing countermeasures to screening for the very threats those countermeasures defend against.
+
+This is the narrative that wins: **"We can both build the sword and build the shield."**
+
 ### Target: Nipah Virus Glycoprotein G (NiV-G)
 
 **Why Nipah** (maximises Impact at 30% weight):
@@ -308,72 +328,119 @@ Target PDB → Hotspot Selection → RFdiffusion (N backbones)
 - No approved antivirals or vaccines
 - Clear therapeutic target: block ephrin-B2 receptor binding to prevent cell entry
 - Cross-variant validation: NiV-Malaysia, NiV-Bangladesh, HeV, CedV (4+ variants for Medium track)
+- The same NiV-G protein can be used as the threat target for the Hard track screening demo
 
 **Alternative targets** (if another team picks Nipah):
 - H5N1 haemagglutinin — most timely given current avian flu crisis ("completely out of control" per U. Glasgow)
 - Ebola GP — high-impact, well-characterised, multiple variant structures available
 
-### Execution Plan
+### How All Three Tracks Reinforce Each Other
 
-| Day | Work | Maps to |
-|-----|------|---------|
-| **Day 1** (Mon) | Set up Amina CLI + API key. Install `amina-skills`. Implement `amina-bridge` skill. | Technical Execution (20%) |
-| **Day 2** (Tue) | Implement `struct-predictor` Python. Implement `binder-designer` core pipeline. Fetch NiV-G target (PDB 7TXZ). | Technical Execution (20%) |
-| **Day 3** (Wed) | Run binder design: RFdiffusion (50 backbones) -> ProteinMPNN -> Boltz-2 validation -> IPSAE scoring. Produce ranked candidate table. | Impact (30%), Rigour (25%) |
-| **Day 4** (Thu) | **Workshop day**. Implement `epitope-mapper`. Conservation analysis across NiV/HeV/CedV. Cross-variant IPSAE validation. Classify diagnostic vs therapeutic candidates. | Rigour (25%), Creativity (15%) |
-| **Day 5-6** (Fri-Sat) | Write 4-page report. Record 3-5 min demo. Polish README + architecture diagram. Update orchestrator + CLAUDE.md. Submit on DoraHacks. | Presentation (10%) |
+```
+                          ┌─────────────────────────────┐
+                          │     NIPAH VIRUS (NiV-G)     │
+                          └─────────┬───────────────────┘
+                                    │
+              ┌─────────────────────┼─────────────────────┐
+              ▼                     ▼                     ▼
+    ┌─────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+    │   EASY TRACK    │  │  MEDIUM TRACK    │  │   HARD TRACK     │
+    │ Binder Design   │  │  Broad-Spectrum  │  │ Threat Screening │
+    │                 │  │                  │  │                  │
+    │ Design binders  │  │ Find conserved   │  │ Build structural │
+    │ against NiV-G   │  │ epitopes across  │  │ screening that   │
+    │ ephrin-B2 site  │  │ NiV/HeV/CedV     │  │ catches redesign │
+    │                 │  │ Design cross-    │  │ ed NiV-G even    │
+    │ RFdiffusion →   │  │ reactive binders │  │ with <30% seq    │
+    │ ProteinMPNN →   │  │                  │  │ identity         │
+    │ Boltz-2 → IPSAE │  │ Validates Easy   │  │                  │
+    │                 │  │ track binders    │  │ Also screens our │
+    │ → Diagnostic &  │  │ across variants  │  │ own designs as a │
+    │   Therapeutic   │  │                  │  │ safety check     │
+    │   candidates    │  │                  │  │                  │
+    └────────┬────────┘  └────────┬─────────┘  └────────┬─────────┘
+             │                    │                     │
+             └────────────────────┼─────────────────────┘
+                                  ▼
+                    ┌──────────────────────────┐
+                    │    UNIFIED SUBMISSION    │
+                    │ "Both sword and shield"  │
+                    │ against Nipah virus      │
+                    └──────────────────────────┘
+```
+
+- **Easy feeds Medium**: binder candidates designed in Easy are validated across variant structures in Medium
+- **Easy feeds Hard**: our own binder designs become test cases for the threat screener (responsible use demo)
+- **Hard validates Easy**: screening tool verifies our therapeutic binders don't trigger threat flags (benign confirmation)
+- **Hard stands alone**: screening tool independently detects redesigned NiV-G variants that evade BLAST
+
+### Execution Plan (All Three Tracks)
+
+| Day | Work | Tracks | Judging Criteria |
+|-----|------|--------|-----------------|
+| **Day 1** (Mon) | Set up Amina CLI + API key. Install `amina-skills`. Implement `amina-bridge`. Start `struct-predictor` implementation. | Infrastructure | Technical Execution (20%) |
+| **Day 2** (Tue) | Finish `struct-predictor`. Implement `binder-designer` core. Fetch NiV-G (PDB 7TXZ). First binder design run. | **Easy** | Technical Execution (20%) |
+| **Day 3** (Wed) | Full binder pipeline: RFdiffusion (50 backbones) -> ProteinMPNN -> Boltz-2 -> IPSAE scoring. Ranked candidate table. Start `epitope-mapper`. | **Easy + Medium** | Impact (30%), Rigour (25%) |
+| **Day 4** (Thu) | **Workshop day**. Conservation analysis across NiV/HeV/CedV. Cross-variant IPSAE validation. Start `threat-screener`: build threat database, implement structural homology screening + motif detection. | **Medium + Hard** | Rigour (25%), Creativity (15%) |
+| **Day 5** (Fri) | Finish `threat-screener`: assemble test sets (known threats + benign controls), run screening benchmark, compute TPR/FPR/F1. Run our own binder designs through screener as safety check. Anomaly scoring module. | **Hard** | Impact (30%), Creativity (15%) |
+| **Day 6** (Sat) | Write 4-page report (all 3 tracks). Record 3-5 min demo. Polish README + architecture diagram. Update orchestrator + CLAUDE.md. Submit on DoraHacks. | All | Presentation (10%) |
 
 ### Demo Narrative (3-5 min)
 
-1. **Problem** (30s): "Nipah virus kills 40-75% of those infected. There are no approved therapeutics. Traditional antibody development takes 6-12 months."
-2. **Solution** (30s): "ClawBio is an agent-driven bioinformatics framework. We added protein design skills powered by AminoAnalytica's Amina platform to go from target to binder candidates in hours."
-3. **Live demo** (2-3 min): Type natural language query -> agent fetches NiV-G -> runs RFdiffusion -> ProteinMPNN -> Boltz-2 -> IPSAE scoring -> ranked report with sequences, structures, scores
-4. **Results** (1 min): Show top binder candidates, IPSAE scores, cross-variant validation, diagnostic vs therapeutic classification
+1. **Problem** (30s): "Nipah virus kills 40-75% of those infected with no approved therapeutics. Worse: AI tools that can design countermeasures can also redesign threats that evade current screening. We need both offence and defence."
+2. **Solution** (30s): "ClawBio is an agent-driven bioinformatics framework. We built skills for all three tracks — binder design, broad-spectrum validation, and biosecurity screening — all powered by AminoAnalytica's Amina platform."
+3. **Live demo** (2 min): Natural language query -> agent designs binders against NiV-G -> validates across Henipavirus variants -> screens designs for safety
+4. **Threat screening demo** (30s): Show redesigned NiV-G sequence that BLAST misses but our structural screener catches. Show TPR/FPR stats.
+5. **Results** (30s): Top binder candidates with IPSAE scores, cross-variant binding table, screening benchmark results, diagnostic vs therapeutic classification
 
 ## Alignment with Judging Criteria
 
 | Criterion | Weight | How ClawBio Maximises Score |
 |-----------|--------|---------------------------|
-| **Impact** | **30%** | Nipah = BSL-4, 40-75% CFR, no approved therapeutics, explicitly named in brief. Designed binders with real sequences + IPSAE scores against a named target — exactly what brief asks for. |
-| **Scientific Rigour** | **25%** | IPSAE scoring (validated across 3,766 binders). Reproducibility bundles (commands.sh, environment.yml, checksums). Audit logs. Limitations section in write-up. Cross-variant validation. |
-| **Technical Execution** | **20%** | Working end-to-end pipeline. Amina CLI integration via official skills package. Modular, reproducible code. Bio-orchestrator chains skills automatically. |
-| **Creativity** | **15%** | First bioinformatics agent framework for protein design. Natural language -> binder candidates. Multi-skill orchestration. Diagnostic vs therapeutic classification from same pipeline. ClawBio's 17-skill ecosystem shows this isn't a one-off. |
-| **Presentation** | **10%** | Auto-generated publication-ready reports. 3-5 min demo shows conversational workflow. Architecture diagrams. Clear README with setup instructions. |
+| **Impact** | **30%** | All three tracks against Nipah (BSL-4, 40-75% CFR, no therapeutics). Binders + cross-variant validation + biosecurity screening = complete biodefence pipeline. The threat-screener directly addresses the Science 2025 paper showing current screening is broken. |
+| **Scientific Rigour** | **25%** | IPSAE scoring (validated across 3,766 binders). Cross-variant validation with named structures. Threat screening with quantified TPR/FPR/F1 on real test sets. Reproducibility bundles. Limitations section in write-up. |
+| **Technical Execution** | **20%** | 5 new skills working together. Amina CLI integration via official skills package. Modular, reproducible code. Bio-orchestrator chains all skills automatically. Every step is logged and reproducible. |
+| **Creativity** | **15%** | All three tracks unified against one target. "Sword and shield" narrative. Agent-driven protein design. Threat-screener that checks our own designs (responsible AI). First bioinformatics agent framework with built-in biosecurity screening. |
+| **Presentation** | **10%** | Auto-generated reports. 3-5 min demo showing all three tracks in one workflow. Architecture diagrams. Clear README. The narrative arc (design -> validate -> screen) is inherently compelling. |
 
 ## Submission Deliverables Mapping
 
 | Hackathon Requirement | ClawBio Output |
 |----------------------|----------------|
-| Write-up (max 4 pages) | `report.md` from binder-designer + epitope-mapper, edited for submission |
-| Code (GitHub repo) | ClawBio repo with new skills, clear README (overview, setup, architecture, Amina integration) |
-| Demo (3-5 min) | Screen recording: natural language query -> full pipeline -> results |
-| Designed sequences/structures/datasets | FASTA files, PDB structures, IPSAE score CSV, confidence plots, cross-variant binding table |
+| Write-up (max 4 pages) | Page 1: Problem + approach. Page 2: Binder design results (Easy). Page 3: Cross-variant validation (Medium) + screening results (Hard). Page 4: Architecture, limitations, next steps. |
+| Code (GitHub repo) | ClawBio repo with 5 new skills, clear README (overview, setup, architecture, Amina integration) |
+| Demo (3-5 min) | Screen recording: NL query -> binder design -> cross-variant validation -> threat screening -> full report |
+| Designed sequences/structures/datasets | Binder FASTA sequences, PDB structures, IPSAE score CSV, cross-variant binding table, screening benchmark (TPR/FPR/F1), threat database, confidence plots |
 
 ## Implementation Checklist
 
-### Critical Path (must-have for submission)
+### Critical Path — All Three Tracks
 - [ ] Set up Amina CLI + authenticate (`pip install amina-cli && amina auth set-key`)
 - [ ] Install Amina skills package (`npx skills add AminoAnalytica/amina-skills --all`)
 - [ ] Create `skills/amina-bridge/` — Amina CLI wrapper for ClawBio
 - [ ] Implement `skills/struct-predictor/struct_predictor.py` — PDB fetch, Boltz-2, ESMFold, RMSD
-- [ ] Create `skills/binder-designer/` — RFdiffusion -> ProteinMPNN -> Boltz-2 -> IPSAE
-- [ ] Run binder design against NiV-G (PDB 7TXZ) — produce ranked candidates with real scores
-- [ ] Write 4-page report
+- [ ] Create `skills/binder-designer/` — RFdiffusion -> ProteinMPNN -> Boltz-2 -> IPSAE (Easy track)
+- [ ] Run binder design against NiV-G (PDB 7TXZ) — produce ranked candidates with real IPSAE scores
+- [ ] Create `skills/epitope-mapper/` — conservation analysis across NiV/HeV/CedV (Medium track)
+- [ ] Cross-variant IPSAE validation of binder candidates across Henipavirus variants
+- [ ] Classify binder candidates as diagnostic vs therapeutic
+- [ ] Create `skills/threat-screener/` — structural homology + motif detection + anomaly scoring (Hard track)
+- [ ] Build threat protein database (toxins, virulence factors) + benign control set
+- [ ] Run screening benchmark — report TPR, FPR, precision, recall, F1
+- [ ] Screen our own binder designs as a safety/responsibility check
+- [ ] Show specific example of threat that evades BLAST but is caught by structural screening
+- [ ] Update `skills/bio-orchestrator/orchestrator.py` with new routes + chained workflows
+- [ ] Update `CLAUDE.md` routing table with all new skills
+- [ ] Write 4-page report covering all three tracks
 - [ ] Record 3-5 min demo
 - [ ] Submit on DoraHacks by Saturday 8 March
 
-### High Priority (strengthens submission)
-- [ ] Create `skills/epitope-mapper/` — conservation analysis for broad-spectrum (Medium track)
-- [ ] Cross-variant validation: NiV-Malaysia, NiV-Bangladesh, HeV, CedV
-- [ ] Classify binder candidates as diagnostic vs therapeutic
-- [ ] Update `skills/bio-orchestrator/orchestrator.py` with new routes
-- [ ] Update `CLAUDE.md` routing table
-
-### Stretch Goals
-- [ ] Create `skills/threat-screener/` — structural/motif/anomaly detection (Hard track)
-- [ ] Add demo data to repo (NiV-G PDB, variant sequences, example outputs)
+### Enhancements (strengthens submission further)
+- [ ] Add demo data to repo (NiV-G PDB, variant sequences, threat DB, example outputs)
+- [ ] Property prediction (solubility, toxicity, aggregation, stability) via Amina for top binder candidates
 - [ ] Architecture diagram for pitch deck
-- [ ] Property prediction (solubility, toxicity, aggregation) via Amina for top candidates
+- [ ] Behavioural anomaly detection module (design pattern analysis — the most creative Hard track direction)
+- [ ] Dual-use analysis: classify grey-zone proteins (e.g., ACE2 binders) with confidence intervals
 
 ## Key Technical References
 
